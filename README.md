@@ -56,11 +56,28 @@ Genie uses CPU-inspired terminology to model development work:
 - [Cursor](https://cursor.sh) IDE installed
 - A project repository
 
-### Installation
+### Quick Install
 
-1. Clone or download this repository
+Run this command in your project directory:
+
+**macOS / Linux (Bash):**
+```bash
+curl -fsSL https://raw.githubusercontent.com/glvent/Genie/main/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/glvent/Genie/main/install.ps1 | iex
+```
+
+<details>
+<summary>Manual Installation</summary>
+
+1. Download or clone this repository
 2. Copy the `.cursor/rules/` folder to your project root
 3. Open your project in Cursor
+
+</details>
 
 ### Initialize Your Project
 
