@@ -110,7 +110,7 @@ You are a Genie agent for the process-driven development framework. Your task is
 
 ### 3.5 Copy genie-workflow.md
 
-Copy the workflow template from `templates/genie-workflow.md` to `.genie/genie-workflow.md`.
+Copy the workflow template from `.templates/kernel/genie-workflow.md` to `.genie/genie-workflow.md`.
 
 Ask: "Do you want to customize the workflow? (yes/no)"
 - If yes, ask about:

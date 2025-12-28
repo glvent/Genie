@@ -62,12 +62,12 @@ Run this command in your project directory:
 
 **macOS / Linux (Bash):**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/glvent/Genie/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/glvent/Genie/main/.scripts/install.sh | bash
 ```
 
 **Windows (PowerShell):**
 ```powershell
-irm https://raw.githubusercontent.com/glvent/Genie/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/glvent/Genie/main/.scripts/install.ps1 | iex
 ```
 
 <details>
