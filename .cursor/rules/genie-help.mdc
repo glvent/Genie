@@ -1,0 +1,157 @@
+---
+description: Show available commands and usage information
+globs: 
+alwaysApply: false
+---
+
+# Genie Help
+
+## 1.0 SYSTEM DIRECTIVE
+
+You are a Genie agent. Your task is to provide **Help** - show available commands, usage information, and examples.
+
+---
+
+## 2.0 HELP MODES
+
+### 2.1 General Help (`genie help`)
+
+Display all available commands:
+
+```
+🧞 Genie - Process-Driven Development for Cursor
+═══════════════════════════════════════════════════
+
+CORE COMMANDS
+  init          Initialize a new Genie project
+  spawn         Create a new process (major milestone)
+  fork          Create a new thread within a process
+  exec          Execute the next instruction
+
+CONTROL COMMANDS
+  interrupt     Add an urgent bug/fix (jumps the queue)
+  yield         Pause and save current state
+  kill          Cancel a process, thread, or instruction
+  rewind        Rollback changes (revert commits)
+
+NAVIGATION COMMANDS
+  status        Show current project status
+  jump          Switch to a different process/thread
+  help          Show this help message
+
+MAINTENANCE COMMANDS
+  archive       Archive a completed process
+  unarchive     Restore an archived process
+
+FLAGS (available on most commands)
+  --dry-run     Preview what a command would do without executing
+  --process     Specify target process (for fork, kill, etc.)
+
+TERMINOLOGY
+  🧠 Kernel     The master process queue (.genie/genie-kernel.md)
+  🔵 Process    A major milestone or epic
+  🟢 Thread     A feature or component within a process
+  ⚪ Instruction An atomic unit of work
+  🔴 Interrupt  An urgent bug that preempts normal work
+
+Use 'genie help <command>' for detailed usage of any command.
+Use 'genie help --examples' for common usage examples.
+```
+
+### 2.2 Command-Specific Help (`genie help <command>`)
+
+For each command, show:
+- Description
+- Usage syntax
+- Available flags
+- Examples
+
+**Example: `genie help spawn`**
+
+```
+🧞 genie spawn
+═══════════════════════════════════════════════════
+
+Create a new process (major milestone or epic).
+
+USAGE
+  genie spawn                      Interactive mode
+  genie spawn "<description>"      Quick create
+  genie spawn "<desc>" --dry-run   Preview without creating
+
+FLAGS
+  --dry-run     Show what would be created without executing
+  --priority    Set priority (high/medium/low)
+  --blocked-by  Set dependency on another process
+
+EXAMPLES
+  genie spawn "User Authentication"
+  genie spawn "Payment Integration" --priority high
+  genie spawn "Admin Panel" --blocked-by auth_20251227
+
+WHAT IT CREATES
+  .genie/processes/<id>/
+  ├── process-spec.md     # Requirements and scope
+  ├── process-queue.md    # Threads and instructions
+  └── process-meta.json   # Metadata
+
+SEE ALSO
+  genie fork      Create threads within a process
+  genie kill      Cancel a process
+  genie status    View all processes
+```
+
+### 2.3 Examples (`genie help --examples`)
+
+```
+🧞 Common Genie Workflows
+═══════════════════════════════════════════════════
+
+STARTING A NEW PROJECT
+  1. genie init                    # Set up Genie
+  2. genie spawn "Build MVP"       # Create first process
+  3. genie fork "User Auth"        # Add a thread
+  4. genie exec                    # Start working
+
+DAILY WORKFLOW
+  1. genie status                  # See where you left off
+  2. genie exec                    # Resume or start next instruction
+  3. genie yield                   # Pause when done for the day
+
+HANDLING A BUG
+  1. genie interrupt "Login broken on Safari"
+  2. Select priority: [!] Critical
+  3. genie exec                    # Fix is now next in queue
+
+COMPLETING A PROCESS
+  1. genie exec                    # Complete remaining instructions
+  2. genie status                  # Verify all done
+  3. genie archive auth_20251227   # Archive completed work
+
+NAVIGATING BETWEEN WORK
+  1. genie jump payments_20251229  # Switch to another process
+  2. genie status                  # See new context
+  3. genie exec                    # Work on new process
+
+FIXING A MISTAKE
+  1. genie rewind --last           # Undo last instruction
+  2. genie exec                    # Re-implement differently
+```
+
+---
+
+## 3.0 CONTEXTUAL HELP
+
+Based on current state, offer relevant suggestions:
+
+**If not initialized:**
+> "💡 Tip: Run `genie init` to set up Genie for this project."
+
+**If no processes:**
+> "💡 Tip: Run `genie spawn` to create your first process."
+
+**If instruction in progress:**
+> "💡 Tip: You're mid-instruction. Use `genie yield` to pause or complete the current work."
+
+**If interrupts pending:**
+> "💡 Tip: You have pending interrupts. Run `genie exec` to handle them."

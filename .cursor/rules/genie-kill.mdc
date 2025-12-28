@@ -1,0 +1,132 @@
+---
+description: Cancel a process, thread, or instruction
+globs: 
+alwaysApply: false
+---
+
+# Genie Kill
+
+## 1.0 SYSTEM DIRECTIVE
+
+You are a Genie agent. Your task is to **Kill** - cancel a process, thread, or instruction.
+
+**CRITICAL:** This is a destructive operation. Always confirm before proceeding. Backup before deletion.
+
+---
+
+## 1.1 SETUP CHECK
+
+1. **Verify Genie is initialized:** Check for `.genie/genie-kernel.md`
+   - If missing: "Nothing to kill - Genie is not initialized."
+
+2. **Load kernel and session**
+
+---
+
+## 2.0 TARGET IDENTIFICATION
+
+### 2.1 Parse Target
+
+Accept formats:
+- `genie kill` - Interactive selection
+- `genie kill <process_id>` - Kill entire process
+- `genie kill <process_id>/<thread>` - Kill specific thread
+- `genie kill --instruction "<name>"` - Kill specific instruction
+
+### 2.2 Interactive Selection (if no target specified)
+
+Show available targets:
+> "What would you like to kill?
+> 
+> Processes:
+>   1) auth_20251227 - Authentication System [~]
+>   2) dashboard_20251228 - User Dashboard [ ]
+> 
+> Or specify:
+>   T) A specific thread
+>   I) A specific instruction
+>   C) Cancel"
+
+---
+
+## 3.0 VALIDATION
+
+### 3.1 Check for Active Work
+
+If target has `[~]` in-progress items:
+> "⚠️ Warning: '<target>' has work in progress.
+> 
+> Current instruction: <instruction_name>
+> Files modified: <file_list>
+> 
+> Killing will:
+>   - Mark instruction as cancelled
+>   - NOT revert file changes (use `genie rewind` for that)
+> 
+> Continue? (yes/no)"
+
+### 3.2 Check for Dependencies
+
+If killing a process that blocks others:
+> "⚠️ Warning: Killing '<process>' will unblock:
+>   - dashboard_20251228 (User Dashboard)
+>   - settings_20251229 (Settings Page)
+> 
+> These processes will become available to start.
+> Continue? (yes/no)"
+
+---
+
+## 4.0 EXECUTE KILL
+
+### 4.1 Kill Process
+
+1. **Backup:** Copy process folder to `.genie/archive/<process_id>_killed_<date>/`
+2. **Update kernel:**
+   - Remove process entry
+   - Update "Queued Processes" count
+   - Remove from any `*Blocked by*` references
+3. **Update session:** If killed process was active, clear session
+4. **Delete:** Remove `.genie/processes/<process_id>/`
+
+### 4.2 Kill Thread
+
+1. **Update process-queue.md:** Remove thread section
+2. **Update kernel:** Decrement thread/instruction counts
+3. **Update process-meta.json:** Update timestamp
+
+### 4.3 Kill Instruction
+
+1. **Update process-queue.md:** Remove instruction line
+2. **Update kernel:** Decrement instruction count
+3. **If was in progress:** Clear session state
+
+---
+
+## 5.0 DRY RUN MODE
+
+**If `--dry-run` flag is present:**
+
+```
+🔍 DRY RUN: genie kill auth_20251227
+
+Would perform the following actions:
+  ✓ Backup to: .genie/archive/auth_20251227_killed_20251227/
+  ✓ Remove from: genie-kernel.md
+  ✓ Unblock: dashboard_20251228, settings_20251229
+  ✓ Delete: .genie/processes/auth_20251227/
+
+No changes made. Run without --dry-run to execute.
+```
+
+---
+
+## 6.0 COMPLETION
+
+Announce:
+> "✓ Killed: <target>
+> 
+> Backup saved to: .genie/archive/<backup_folder>/
+> 
+> To restore, manually move the backup folder back to processes/
+> or use the archived files as reference."

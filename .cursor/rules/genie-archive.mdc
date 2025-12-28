@@ -1,0 +1,202 @@
+---
+description: Archive or unarchive completed processes
+globs: 
+alwaysApply: false
+---
+
+# Genie Archive
+
+## 1.0 SYSTEM DIRECTIVE
+
+You are a Genie agent. Your task is to **Archive** completed processes to keep the kernel clean, or **Unarchive** to restore them.
+
+**CRITICAL:** Only completed processes can be archived. Preserve all data for potential restoration.
+
+---
+
+## 1.1 SETUP CHECK
+
+1. **Verify Genie is initialized:** Check for `.genie/genie-kernel.md`
+   - If missing: "Nothing to archive - Genie is not initialized."
+
+2. **Load kernel**
+
+---
+
+## 2.0 ARCHIVE OPERATION
+
+### 2.1 Target Selection
+
+**Interactive (`genie archive`):**
+```
+📦 Archive Completed Processes
+
+Completed processes available for archiving:
+  1) auth_20251227 - Authentication System [x]
+     Completed: 3 days ago | Instructions: 12/12
+  
+  2) setup_20251220 - Initial Setup [x]
+     Completed: 7 days ago | Instructions: 5/5
+
+Enter number to archive, or:
+  A) Archive all completed processes
+  C) Cancel
+```
+
+**Direct:** `genie archive <process_id>`
+
+**Batch:** `genie archive --all-completed`
+
+### 2.2 Validation
+
+- Process must be marked `[x]` (completed)
+- Cannot archive active process
+- Cannot archive process with pending interrupts
+
+If validation fails:
+```
+❌ Cannot archive 'auth_20251227':
+   - Status is [~] (in progress), not [x] (completed)
+   
+Complete or kill the process first.
+```
+
+### 2.3 Execute Archive
+
+1. **Create archive directory:** `.genie/archive/<process_id>/`
+
+2. **Move process files:**
+   ```
+   .genie/processes/<process_id>/ → .genie/archive/<process_id>/
+   ```
+
+3. **Update process-meta.json:**
+   ```json
+   {
+     "status": "archived",
+     "archived_at": "<timestamp>"
+   }
+   ```
+
+4. **Update kernel:**
+   - Remove process entry from `genie-kernel.md`
+   - Decrement "Queued Processes" count
+
+5. **Backup kernel** before modification
+
+---
+
+## 3.0 UNARCHIVE OPERATION
+
+### 3.1 List Archived (`genie status --archived`)
+
+```
+📦 Archived Processes
+
+  1) auth_20251227 - Authentication System
+     Archived: 7 days ago | Completed: 12 instructions
+  
+  2) setup_20251220 - Initial Setup
+     Archived: 14 days ago | Completed: 5 instructions
+
+Use `genie unarchive <id>` to restore.
+```
+
+### 3.2 Execute Unarchive
+
+`genie unarchive <process_id>`
+
+1. **Validate:** Check process exists in `.genie/archive/`
+
+2. **Move files back:**
+   ```
+   .genie/archive/<process_id>/ → .genie/processes/<process_id>/
+   ```
+
+3. **Update process-meta.json:**
+   ```json
+   {
+     "status": "completed",
+     "archived_at": null,
+     "unarchived_at": "<timestamp>"
+   }
+   ```
+
+4. **Update kernel:**
+   - Append process entry to end of `genie-kernel.md`
+   - Increment "Queued Processes" count
+
+---
+
+## 4.0 DRY RUN MODE
+
+**Archive dry run:**
+```
+🔍 DRY RUN: genie archive auth_20251227
+
+Would perform:
+  ✓ Move: processes/auth_20251227/ → archive/auth_20251227/
+  ✓ Update: process-meta.json (status: archived)
+  ✓ Remove from: genie-kernel.md
+  ✓ Backup: genie-kernel.md.backup
+
+No changes made. Run without --dry-run to execute.
+```
+
+**Unarchive dry run:**
+```
+🔍 DRY RUN: genie unarchive auth_20251227
+
+Would perform:
+  ✓ Move: archive/auth_20251227/ → processes/auth_20251227/
+  ✓ Update: process-meta.json (status: completed)
+  ✓ Append to: genie-kernel.md
+
+No changes made. Run without --dry-run to execute.
+```
+
+---
+
+## 5.0 COMPLETION
+
+### Archive Success:
+```
+✓ Archived: auth_20251227 (Authentication System)
+
+Location: .genie/archive/auth_20251227/
+Instructions preserved: 12
+Threads preserved: 3
+
+The kernel is now cleaner. Use `genie status --archived` to view archived processes.
+```
+
+### Unarchive Success:
+```
+✓ Restored: auth_20251227 (Authentication System)
+
+The process has been added back to the kernel.
+Status: Completed [x]
+
+Use `genie status` to view, or `genie rewind` if you need to redo work.
+```
+
+---
+
+## 6.0 AUTO-ARCHIVE
+
+If configured in `.genie/genie-workflow.md`:
+
+```markdown
+## Auto-Archive Settings
+auto_archive_days: 7
+```
+
+On `genie status` or `genie exec`, check for processes completed > 7 days ago:
+
+```
+💡 Auto-archive suggestion: 2 processes completed over 7 days ago.
+   - auth_20251227 (8 days)
+   - setup_20251220 (14 days)
+
+Archive them now? (yes/no/never ask again)
+```

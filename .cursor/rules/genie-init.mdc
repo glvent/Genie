@@ -1,0 +1,199 @@
+---
+description: Initialize a new Genie project - sets up kernel and spawns initial processes
+globs: 
+alwaysApply: false
+---
+
+# Genie Init
+
+## 1.0 SYSTEM DIRECTIVE
+
+You are a Genie agent for the process-driven development framework. Your task is to initialize a new Genie project by creating the kernel and core configuration files.
+
+**CRITICAL:** Validate the success of every file operation. If any operation fails, halt immediately, announce the failure, and await instructions.
+
+---
+
+## 1.1 PRE-INITIALIZATION CHECK
+
+**PROTOCOL: Check if Genie is already initialized.**
+
+1. **Check for `.genie/` directory:**
+   - If `.genie/genie-kernel.md` exists, announce: "Genie is already initialized. Use `genie status` to view current state or `genie spawn` to create a new process."
+   - Halt initialization.
+
+2. **If not initialized, proceed to Project Discovery.**
+
+---
+
+## 2.0 PROJECT DISCOVERY
+
+**PROTOCOL: Analyze the project to determine if it's new or existing.**
+
+### 2.1 Detect Project Maturity
+
+**Brownfield Indicators (Existing Project):**
+- `.git`, `.svn`, or `.hg` directory exists
+- Dependency manifests: `package.json`, `pom.xml`, `requirements.txt`, `go.mod`, `Cargo.toml`
+- Source directories: `src/`, `app/`, `lib/` with code files
+
+**Greenfield (New Project):**
+- None of the above indicators present
+- Directory is empty or contains only documentation
+
+### 2.2 Handle Project Type
+
+**If Brownfield:**
+1. Announce: "Existing project detected. I'll analyze the codebase to understand the current state."
+2. Request permission: "May I perform a read-only scan to analyze the project structure? (yes/no)"
+3. If approved, analyze:
+   - README.md for project description
+   - Dependency files for tech stack
+   - Directory structure for architecture
+4. Use findings to pre-populate configuration files.
+
+**If Greenfield:**
+1. Announce: "New project detected. Let's set up Genie from scratch."
+2. Ask: "What are you building? Please describe your project in a sentence or two."
+3. Initialize git if not present: `git init`
+
+---
+
+## 3.0 CORE CONFIGURATION
+
+**PROTOCOL: Create the `.genie/` directory and core files interactively.**
+
+### 3.1 Create Directory Structure
+
+```
+.genie/
+├── genie-core.md
+├── genie-conventions.md
+├── genie-stack.md
+├── genie-workflow.md
+├── genie-kernel.md
+├── genie-session.json
+└── processes/
+```
+
+### 3.2 Generate genie-core.md (Interactive)
+
+1. Announce: "Let's define your project's core identity."
+2. Ask up to 3 questions about:
+   - Target users
+   - Main goals/features
+   - Success criteria
+3. Generate `genie-core.md` with:
+   - Project overview
+   - Target audience
+   - Core features
+   - Goals
+
+**Auto-generate option:** Offer "E) Auto-generate based on what I know" as the last option.
+
+### 3.3 Generate genie-conventions.md (Interactive)
+
+1. Announce: "Now let's define your project's style and conventions."
+2. Ask about:
+   - Code style preferences
+   - Documentation standards
+   - Naming conventions
+3. Generate `genie-conventions.md`
+
+### 3.4 Generate genie-stack.md (Interactive or Detected)
+
+**For Brownfield:** Present detected stack for confirmation.
+**For Greenfield:** Ask about:
+- Primary language/framework
+- Database (if any)
+- Key dependencies
+
+### 3.5 Copy genie-workflow.md
+
+Copy the workflow template from `templates/genie-workflow.md` to `.genie/genie-workflow.md`.
+
+Ask: "Do you want to customize the workflow? (yes/no)"
+- If yes, ask about:
+  - Testing preferences (TDD, optional, none)
+  - Commit frequency (per instruction, per thread)
+  - Code review preferences
+
+---
+
+## 4.0 INITIAL PROCESS GENERATION
+
+**PROTOCOL: Create the first process to kickstart development.**
+
+### 4.1 Initialize Kernel
+
+Create `genie-kernel.md`:
+
+```markdown
+# Genie Kernel
+
+## System Status
+- Active Process: none
+- Pending Interrupts: 0
+- Queued Processes: 0
+
+---
+
+```
+
+### 4.2 Initialize Session
+
+Create `genie-session.json`:
+
+```json
+{
+  "active_process": null,
+  "active_thread": null,
+  "current_instruction": null,
+  "pending_interrupts": 0,
+  "last_activity": "<current_timestamp>",
+  "navigation_lock": false,
+  "jump_history": []
+}
+```
+
+### 4.3 Propose Initial Process
+
+1. Analyze project context from `genie-core.md` and `genie-stack.md`
+2. Propose an initial process:
+   - **Greenfield:** "To get started, I suggest: 'Build MVP core functionality'"
+   - **Brownfield:** "Based on the codebase, I suggest: '<detected improvement or feature>'"
+3. Ask for confirmation or alternative
+
+### 4.4 Create Initial Process
+
+If user confirms:
+1. Generate process ID: `<shortname>_YYYYMMDD`
+2. Create `processes/<process_id>/` directory
+3. Generate `process-spec.md` with requirements
+4. Generate `process-queue.md` with initial threads and instructions
+5. Update `genie-kernel.md` with the new process
+
+---
+
+## 5.0 FINALIZATION
+
+1. **Summary:** Present a summary of all created files
+2. **Commit:** Offer to commit the setup: `git add .genie && git commit -m "genie(init): Initialize Genie project"`
+3. **Next Steps:** 
+   > "Genie is ready! Here's what you can do next:
+   > - `genie exec` - Start working on the first instruction
+   > - `genie status` - View current state
+   > - `genie spawn` - Create additional processes
+   > - `genie help` - See all available commands"
+
+---
+
+## 6.0 ERROR HANDLING
+
+**If any step fails:**
+1. Announce the specific failure
+2. Offer recovery options:
+   - Retry the failed step
+   - Skip and continue
+   - Abort initialization
+3. If aborting, clean up any partially created files

@@ -1,0 +1,29 @@
+{
+  "process_id": "{{PROCESS_ID}}",
+  "name": "{{PROCESS_NAME}}",
+  "type": "feature",
+  "status": "pending",
+  "priority": "medium",
+  "created_at": "{{CREATED_AT}}",
+  "updated_at": "{{UPDATED_AT}}",
+  "completed_at": null,
+  "archived_at": null,
+  "blocked_by": [],
+  "blocks": [],
+  "threads": {
+    "total": 0,
+    "completed": 0
+  },
+  "instructions": {
+    "total": 0,
+    "completed": 0,
+    "in_progress": 0
+  },
+  "interrupts": {
+    "total": 0,
+    "resolved": 0
+  },
+  "test_debt": 0,
+  "tags": [],
+  "notes": ""
+}

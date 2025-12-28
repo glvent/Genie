@@ -1,0 +1,183 @@
+---
+description: Rollback changes - revert processes, threads, or instructions
+globs: 
+alwaysApply: false
+---
+
+# Genie Rewind
+
+## 1.0 SYSTEM DIRECTIVE
+
+You are a Genie agent. Your task is to **Rewind** - rollback changes by reverting commits associated with processes, threads, or instructions.
+
+**CRITICAL:** This modifies git history. Always confirm before proceeding. This operation may affect uncommitted changes.
+
+---
+
+## 1.1 SETUP CHECK
+
+1. **Verify Genie is initialized:** Check for `.genie/genie-kernel.md`
+   - If missing: "Nothing to rewind - Genie is not initialized."
+
+2. **Check git status:**
+   - If uncommitted changes exist, warn user and offer to stash
+
+3. **Load kernel and session**
+
+---
+
+## 2.0 TARGET SELECTION
+
+### 2.1 Interactive Selection (default)
+
+> "What would you like to rewind?
+> 
+>   A) Last instruction - Revert the most recent completed instruction
+>   B) Specific instruction - Choose from completed instructions
+>   C) Entire thread - Revert all instructions in a thread
+>   D) Entire process - Revert all work in a process
+>   E) Cancel"
+
+### 2.2 Command Variations
+
+- `genie rewind` - Interactive selection
+- `genie rewind --last` - Rewind last completed instruction
+- `genie rewind --instruction "<name>"` - Specific instruction
+- `genie rewind --thread "<name>"` - Entire thread
+- `genie rewind --process <id>` - Entire process
+
+---
+
+## 3.0 COMMIT DISCOVERY
+
+### 3.1 Find Associated Commits
+
+For the selected target:
+1. Read the `process-queue.md` to find commit SHAs (appended to completed instructions)
+2. Use `git log` to find commits with matching messages
+3. Handle "ghost" commits (rebased/squashed):
+   - If SHA not found, search by commit message
+   - Ask user to confirm the replacement commit
+
+### 3.2 Compile Revert List
+
+Create ordered list of commits to revert:
+- Implementation commits
+- Plan update commits (e.g., "genie(plan): Mark instruction complete")
+
+---
+
+## 4.0 EXECUTION PLAN
+
+### 4.1 Present Plan
+
+```
+📋 Rewind Plan
+═══════════════════════════════════════════════════
+
+Target: Instruction "Add validation"
+Process: auth_20251227
+Thread: Login Flow
+
+Commits to revert (newest first):
+  1. e4f5g6h - "feat(auth): Add email validation"
+  2. a1b2c3d - "genie(plan): Mark 'Add validation' complete"
+
+Files affected:
+  - src/auth/validation.ts
+  - src/auth/login.ts
+  - .genie/processes/auth_20251227/process-queue.md
+
+⚠️ This will modify git history.
+
+Proceed? (yes/no)
+```
+
+### 4.2 Dry Run Mode
+
+**If `--dry-run` flag:**
+```
+🔍 DRY RUN: genie rewind --instruction "Add validation"
+
+Would revert:
+  ✓ e4f5g6h - "feat(auth): Add email validation"
+  ✓ a1b2c3d - "genie(plan): Mark 'Add validation' complete"
+
+No changes made. Run without --dry-run to execute.
+```
+
+---
+
+## 5.0 EXECUTE REWIND
+
+### 5.1 Perform Reverts
+
+For each commit (in reverse chronological order):
+```bash
+git revert --no-edit <sha>
+```
+
+### 5.2 Handle Conflicts
+
+If revert fails due to merge conflict:
+> "⚠️ Merge conflict detected while reverting '<commit>'.
+> 
+> Options:
+>   A) Open conflicted files for manual resolution
+>   B) Abort rewind and restore original state
+>   C) Skip this commit and continue"
+
+### 5.3 Update Genie State
+
+After successful revert:
+1. Update `process-queue.md`:
+   - Change `[x]` back to `[ ]` for reverted instructions
+   - Remove commit SHA references
+2. Update kernel:
+   - Update thread/process status
+   - Recalculate progress counts
+3. Update session:
+   - Clear any stale state
+
+---
+
+## 6.0 COMPLETION
+
+```
+✓ Rewind complete!
+
+Reverted:
+  - Instruction: "Add validation"
+  - Commits: 2
+  - Files restored: 2
+
+The instruction is now marked as pending [ ].
+Use `genie exec` to re-implement with a different approach.
+```
+
+---
+
+## 7.0 EDGE CASES
+
+### 7.1 No Commits Found
+
+> "No commits found for '<target>'. This might be because:
+>   - The work was never committed
+>   - Commits were squashed/rebased
+>   - The instruction was marked complete manually
+> 
+> Would you like to:
+>   A) Reset the instruction status to pending (no file changes)
+>   B) Search git history manually
+>   C) Cancel"
+
+### 7.2 Partial Rewind
+
+If some commits succeed but others fail:
+> "⚠️ Partial rewind: 2/3 commits reverted successfully.
+> 
+> Failed: a1b2c3d (merge conflict)
+> 
+> Options:
+>   A) Keep partial rewind, resolve conflict manually
+>   B) Abort and restore original state"

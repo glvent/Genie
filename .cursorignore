@@ -1,0 +1,72 @@
+# Dependencies
+node_modules/
+vendor/
+.venv/
+venv/
+__pycache__/
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# Package locks (large files, not useful for AI context)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+composer.lock
+Gemfile.lock
+poetry.lock
+
+# Logs and caches
+*.log
+.cache/
+.temp/
+.tmp/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Environment files (may contain secrets)
+.env
+.env.*
+
+# Large binary files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.pdf
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Images (not useful for code context)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.svg
+*.webp
+
+# Minified files
+*.min.js
+*.min.css
+
+# Source maps
+*.map

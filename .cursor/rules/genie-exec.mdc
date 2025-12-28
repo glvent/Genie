@@ -1,0 +1,181 @@
+---
+description: Execute the next instruction in the current thread
+globs: 
+alwaysApply: false
+---
+
+# Genie Exec
+
+## 1.0 SYSTEM DIRECTIVE
+
+You are a Genie agent. Your task is to execute the next **Instruction** in the current thread, following the project workflow.
+
+**CRITICAL:** Validate all file operations. Track all file modifications for potential rollback.
+
+---
+
+## 1.1 SETUP CHECK
+
+1. **Verify Genie is initialized:** Check for `.genie/genie-kernel.md`
+   - If missing: 
+     > "❌ No active process.
+     > 
+     > Options:
+     >   A) Run 'genie spawn' to create a new process
+     >   B) Run 'genie status' to see existing processes
+     >   C) Run 'genie init' to set up the project"
+
+2. **Load session state:** Read `.genie/genie-session.json`
+
+3. **Check for abandoned instruction:** 
+   - If `navigation_lock` is `true` and `last_activity` is stale (> 5 min):
+     > "⚠️ Instruction '<instruction_name>' was in progress but appears abandoned.
+     > 
+     > Last activity: <time_ago>
+     > Files modified: <file_list>
+     > Context notes: <notes>
+     > 
+     > Options:
+     >   A) Resume - Continue where you left off
+     >   B) Complete - Mark as done
+     >   C) Reset - Mark as pending, start fresh
+     >   D) Rollback - Revert file changes and reset"
+
+---
+
+## 2.0 INSTRUCTION SELECTION
+
+### 2.1 Determine Active Process/Thread
+
+1. Use `active_process` and `active_thread` from session
+2. If none set, find first pending process and thread from kernel
+
+### 2.2 Check for Interrupts
+
+1. Scan current thread for `[!]` critical interrupts
+2. If found: "⚠️ Critical interrupt detected: '<interrupt>'. This will be handled first."
+3. Then check for `[?]` normal interrupts
+
+### 2.3 Find Next Instruction
+
+1. Read `process-queue.md` for active process
+2. Find first instruction marked `[ ]` (pending) or `[!]`/`[?]` (interrupt)
+3. If no pending instructions in current thread:
+   - Check next thread in process
+   - If no threads: "All instructions in this process are complete! Use `genie archive` or `genie spawn` for new work."
+
+---
+
+## 3.0 INSTRUCTION EXECUTION
+
+### 3.1 Mark In Progress
+
+1. Update instruction status from `[ ]` to `[~]` in `process-queue.md`
+2. Update `genie-kernel.md` thread status to `[~]`
+3. Update session:
+   ```json
+   {
+     "current_instruction": {
+       "name": "<instruction_name>",
+       "status": "in_progress",
+       "started_at": "<timestamp>",
+       "files_modified": [],
+       "context_notes": ""
+     },
+     "navigation_lock": true,
+     "last_activity": "<timestamp>"
+   }
+   ```
+
+### 3.2 Load Context
+
+1. Read project context:
+   - `.genie/genie-core.md` - Product definition
+   - `.genie/genie-conventions.md` - Style guidelines
+   - `.genie/genie-stack.md` - Tech stack
+   - `.genie/genie-workflow.md` - Workflow rules
+
+2. Read process context:
+   - `process-spec.md` - Process specification
+   - `process-queue.md` - Full instruction context
+
+3. Announce: "Starting instruction: '<instruction_name>'"
+
+### 3.3 Implement Instruction
+
+1. **Analyze using @codebase:** Understand existing patterns
+2. **Plan implementation:** Determine files to create/modify
+3. **Execute:** Make the necessary code changes
+4. **Track files:** Add each modified file to `files_modified` in session
+
+### 3.4 Smart Test Suggestions
+
+Based on `.genie/genie-workflow.md`, suggest tests if:
+- Instruction involves business logic
+- Instruction modifies data/state
+- Instruction handles user input
+- Codebase has existing tests
+
+If suggesting: "Would you like me to write tests for this instruction? (yes/no/later)"
+
+---
+
+## 4.0 INSTRUCTION COMPLETION
+
+### 4.1 Mark Complete
+
+1. Update instruction in `process-queue.md`:
+   - Change `[~]` to `[x]`
+   - Append commit SHA if available
+   - Add `⚠️` if completed without tests (when tests were recommended)
+
+2. Update thread status if all instructions complete
+
+3. Update process status if all threads complete
+
+### 4.2 Update Session
+
+```json
+{
+  "current_instruction": null,
+  "navigation_lock": false,
+  "last_activity": "<timestamp>"
+}
+```
+
+### 4.3 Commit Changes
+
+1. Stage modified files
+2. Propose commit message: `feat(<scope>): <instruction description>`
+3. Commit on approval
+
+### 4.4 Check Thread Completion
+
+If thread is now complete:
+1. Update thread status to `[x]`
+2. Show test debt summary if applicable:
+   > "Thread 'Login Flow' complete!
+   > Test Debt: 1 instruction(s) untested
+   > 
+   > Would you like to write tests now? (yes/no)"
+
+---
+
+## 5.0 NEXT STEPS
+
+After completion, offer:
+> "Instruction complete! Next:
+>   A) Continue to next instruction (`genie exec`)
+>   B) Check status (`genie status`)
+>   C) Take a break (`genie yield`)"
+
+---
+
+## 6.0 ERROR HANDLING
+
+**If implementation fails:**
+1. Save current state to session
+2. Offer:
+   - Retry with different approach
+   - Skip instruction (mark with reason)
+   - Rollback changes made so far

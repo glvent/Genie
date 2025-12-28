@@ -1,0 +1,145 @@
+---
+description: Add an urgent bug or hotfix that preempts normal work
+globs: 
+alwaysApply: false
+---
+
+# Genie Interrupt
+
+## 1.0 SYSTEM DIRECTIVE
+
+You are a Genie agent. Your task is to add an **Interrupt** - an urgent bug or hotfix that needs to preempt normal instruction execution.
+
+**CRITICAL:** Validate all file operations. Interrupts should never be lost.
+
+---
+
+## 1.1 SETUP CHECK
+
+1. **Verify Genie is initialized:** Check for `.genie/genie-kernel.md`
+   - If missing: "Genie is not initialized. Run `genie init` first."
+
+2. **Load session:** Read `.genie/genie-session.json`
+3. **Load kernel:** Read `.genie/genie-kernel.md`
+
+---
+
+## 2.0 INTERRUPT DETAILS
+
+### 2.1 Get Interrupt Description
+
+**If description provided as argument:** Use it directly.
+
+**If no description:** Ask:
+> "What's the urgent issue that needs to be addressed?"
+
+### 2.2 Determine Priority
+
+Ask:
+> "What priority level for this interrupt?
+> 
+>   A) [!] Critical - Stop everything, fix now
+>   B) [?] Normal - Fix before next instruction
+>   C) [~] Deferred - Add to end of current thread queue"
+
+### 2.3 Determine Target Location
+
+1. **Default:** Add to currently active thread
+2. **If no active thread:** Ask which process/thread to add to
+3. **If target thread is completed ([x]):**
+   > "⚠️ Thread '<thread_name>' is already completed.
+   > 
+   > The interrupt '<description>' needs a target. Options:
+   >   A) Reopen thread - Change [x] to [~] and add interrupt
+   >   B) New thread - Create '<thread_name> Fixes' thread
+   >   C) Parent process - Add as standalone interrupt
+   >   D) Cancel"
+
+---
+
+## 3.0 INSERT INTERRUPT
+
+### 3.1 Determine Insertion Point
+
+Based on priority:
+- `[!]` Critical: Insert immediately after current in-progress instruction
+- `[?]` Normal: Insert before next pending instruction
+- `[~]` Deferred: Append to end of thread
+
+### 3.2 Update process-queue.md
+
+1. Read current queue
+2. Find insertion point
+3. Insert interrupt line:
+   ```markdown
+   - [!] Interrupt: <description> [S/M/L]
+   ```
+4. Write updated queue
+
+### 3.3 Update Kernel
+
+1. Backup kernel
+2. Update interrupt count in system status
+3. If thread was complete, update thread status to `[~]`
+
+### 3.4 Update Session
+
+```json
+{
+  "pending_interrupts": <incremented_count>,
+  "last_activity": "<timestamp>"
+}
+```
+
+---
+
+## 4.0 EFFORT ESTIMATE
+
+Ask:
+> "How long do you think this will take?
+>   [S] Small (<30 min)
+>   [M] Medium (30 min - 2 hours)
+>   [L] Large (2+ hours)
+>   [?] Unknown"
+
+---
+
+## 5.0 COMPLETION
+
+### 5.1 If Critical Priority
+
+Announce:
+> "🔴 Critical interrupt logged: '<description>'
+> 
+> This will be handled immediately.
+> 
+> Current instruction '<current>' will be paused.
+> Run `genie exec` to start the interrupt fix."
+
+### 5.2 If Normal/Deferred Priority
+
+Announce:
+> "Interrupt logged to <thread_name>: '<description>'
+> 
+> Priority: <priority>
+> Position: <position in queue>
+> 
+> It will be addressed <when>."
+
+---
+
+## 6.0 DRY RUN MODE
+
+**If `--dry-run` flag is present:**
+
+```
+🔍 DRY RUN: genie interrupt "<description>"
+
+Would perform the following actions:
+  ✓ Insert interrupt in: .genie/processes/<process_id>/process-queue.md
+  ✓ Position: After instruction '<current>'
+  ✓ Priority: [!] Critical
+  ✓ Update kernel interrupt count
+
+No changes made. Run without --dry-run to execute.
+```

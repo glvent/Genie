@@ -1,0 +1,186 @@
+---
+description: Create a new process - a major milestone or epic in your project
+globs: 
+alwaysApply: false
+---
+
+# Genie Spawn
+
+## 1.0 SYSTEM DIRECTIVE
+
+You are a Genie agent. Your task is to create a new **Process** - a major milestone or epic that contains threads and instructions.
+
+**CRITICAL:** Validate all file operations. If any fail, halt and report.
+
+---
+
+## 1.1 SETUP CHECK
+
+1. **Verify Genie is initialized:** Check for `.genie/genie-kernel.md`
+   - If missing: "Genie is not initialized. Run `genie init` first."
+   - Halt if not initialized.
+
+2. **Check for active instruction:** Read `.genie/genie-session.json`
+   - If `navigation_lock` is `true`: "Cannot spawn while an instruction is in progress. Use `genie yield` to pause first, or complete the current instruction."
+   - Halt if locked.
+
+---
+
+## 2.0 PROCESS CREATION
+
+### 2.1 Get Process Description
+
+**If description provided as argument:** Use it directly.
+
+**If no description:** Ask:
+> "What process would you like to create? Describe the major feature or milestone."
+
+### 2.2 Check for Duplicates
+
+1. List existing process directories in `.genie/processes/`
+2. Extract short names from process IDs
+3. If proposed name matches existing: 
+   > "A process with a similar name already exists: '<existing_id>'. Options:
+   > A) Use a different name
+   > B) Resume the existing process
+   > C) Create anyway with a unique suffix"
+
+### 2.3 Interactive Specification
+
+1. Announce: "I'll ask a few questions to define this process clearly."
+
+2. Ask 2-4 relevant questions based on description:
+   - What's the main goal?
+   - Who benefits from this?
+   - What are the key deliverables?
+   - Any dependencies on other work?
+
+3. **Offer shortcuts:**
+   - "D) Type your own details"
+   - "E) Auto-generate and review"
+
+### 2.4 Generate Process Artifacts
+
+1. **Generate Process ID:** `<shortname>_YYYYMMDD` (e.g., `auth_20251227`)
+
+2. **Create directory:** `.genie/processes/<process_id>/`
+
+3. **Create process-spec.md:**
+```markdown
+# Process: <Process Name>
+
+## Overview
+<Generated from user input>
+
+## Goals
+- <Goal 1>
+- <Goal 2>
+
+## Deliverables
+- <Deliverable 1>
+- <Deliverable 2>
+
+## Dependencies
+<Dependencies or "None">
+
+## Out of Scope
+<What this process does NOT include>
+```
+
+4. **Create process-queue.md:**
+```markdown
+# Process Queue: <Process Name>
+
+## Threads
+
+### [ ] Thread: <Initial Thread Name>
+- [ ] Instruction: <First instruction> [?]
+- [ ] Instruction: <Second instruction> [?]
+
+---
+Thread Estimate: Pending sizing
+```
+
+5. **Create process-meta.json:**
+```json
+{
+  "process_id": "<process_id>",
+  "name": "<Process Name>",
+  "type": "feature",
+  "status": "pending",
+  "priority": "medium",
+  "created_at": "<timestamp>",
+  "updated_at": "<timestamp>",
+  "blocked_by": [],
+  "blocks": []
+}
+```
+
+### 2.5 Handle Dependencies
+
+Ask: "Does this process depend on any other processes? (yes/no)"
+
+**If yes:**
+1. List existing processes from kernel
+2. Allow user to select dependencies
+3. Update `process-meta.json` with `blocked_by`
+4. Check for circular dependencies before saving
+
+---
+
+## 3.0 UPDATE KERNEL
+
+### 3.1 Backup Kernel
+
+Copy `.genie/genie-kernel.md` to `.genie/genie-kernel.md.backup`
+
+### 3.2 Append to Kernel
+
+Add to `genie-kernel.md`:
+
+```markdown
+---
+
+## [ ] Process: <Process Name> `<process_id>`
+*Priority: <priority> | Threads: <count> | Instructions: <count>*
+<If blocked: *Blocked by: <dependency>*>
+```
+
+### 3.3 Update System Status
+
+Update the header of `genie-kernel.md`:
+- Increment "Queued Processes" count
+
+---
+
+## 4.0 DRY RUN MODE
+
+**If `--dry-run` flag is present:**
+
+```
+🔍 DRY RUN: genie spawn "<Process Name>"
+
+Would perform the following actions:
+  ✓ Create directory: .genie/processes/<process_id>/
+  ✓ Create file: process-spec.md
+  ✓ Create file: process-queue.md
+  ✓ Create file: process-meta.json
+  ✓ Backup: genie-kernel.md → genie-kernel.md.backup
+  ✓ Append to genie-kernel.md
+
+No changes made. Run without --dry-run to execute.
+```
+
+---
+
+## 5.0 COMPLETION
+
+1. **Announce success:**
+   > "Process '<process_id>' created successfully!
+   > 
+   > Next steps:
+   > - `genie fork` - Add more threads to this process
+   > - `genie exec` - Start working on the first instruction
+   > - `genie status` - View the updated kernel"
+
+2. **Update session:** Set `active_process` in `genie-session.json` to the new process ID

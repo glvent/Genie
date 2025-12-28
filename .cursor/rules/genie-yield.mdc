@@ -1,0 +1,119 @@
+---
+description: Pause current work and save state for later resumption
+globs: 
+alwaysApply: false
+---
+
+# Genie Yield
+
+## 1.0 SYSTEM DIRECTIVE
+
+You are a Genie agent. Your task is to **Yield** - pause current work and save all context for seamless resumption later.
+
+**CRITICAL:** All state must be preserved. Nothing should be lost.
+
+---
+
+## 1.1 SETUP CHECK
+
+1. **Verify Genie is initialized:** Check for `.genie/genie-kernel.md`
+   - If missing: "Nothing to yield - Genie is not initialized."
+
+2. **Load session:** Read `.genie/genie-session.json`
+
+3. **Check if there's work to pause:**
+   - If `navigation_lock` is `false` and no active instruction:
+     > "Nothing in progress to yield. Current state:
+     > Active process: <process or 'none'>
+     > Active thread: <thread or 'none'>
+     > 
+     > Use `genie exec` to start working."
+
+---
+
+## 2.0 SAVE CONTEXT
+
+### 2.1 Gather Context Notes
+
+Ask:
+> "Before pausing, would you like to add any notes about where you left off?
+> 
+> Current instruction: '<instruction_name>'
+> Files modified: <file_list>
+> 
+> Notes (or press Enter to skip):"
+
+### 2.2 Update Session State
+
+```json
+{
+  "active_process": "<current_process>",
+  "active_thread": "<current_thread>",
+  "current_instruction": {
+    "name": "<instruction_name>",
+    "status": "paused",
+    "started_at": "<original_start>",
+    "files_modified": ["<list>", "<of>", "<files>"],
+    "context_notes": "<user_notes_or_auto_summary>"
+  },
+  "pending_interrupts": <count>,
+  "last_activity": "<timestamp>",
+  "navigation_lock": false,
+  "jump_history": [...]
+}
+```
+
+### 2.3 Update Kernel (Optional)
+
+If instruction was marked `[~]` in progress:
+- Keep it as `[~]` to indicate work has started
+- Add a note or timestamp if desired
+
+---
+
+## 3.0 GENERATE SUMMARY
+
+Create a summary of current state:
+
+```
+📋 Work paused successfully.
+
+Session saved at: <timestamp>
+
+Current State:
+  Process: <process_name> (<process_id>)
+  Thread: <thread_name>
+  Instruction: <instruction_name> (in progress)
+  
+Files Modified:
+  - <file1>
+  - <file2>
+  
+Context Notes:
+  "<user_notes>"
+
+Pending Interrupts: <count>
+
+To resume: Run `genie exec` in your next session.
+```
+
+---
+
+## 4.0 OFFER COMMIT
+
+If files have been modified:
+> "You have uncommitted changes. Would you like to commit before pausing?
+> 
+>   A) Yes - Commit with message 'wip: <instruction_name>'
+>   B) No - Leave changes staged/unstaged
+>   C) Stash - Git stash the changes"
+
+---
+
+## 5.0 CONFIRMATION
+
+Announce:
+> "✓ State saved. You can safely close Cursor.
+> 
+> When you return, run `genie exec` and I'll ask:
+> 'Welcome back! You were working on <instruction>. Continue?'"

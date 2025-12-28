@@ -1,0 +1,161 @@
+---
+description: Show current project status and progress
+globs: 
+alwaysApply: false
+---
+
+# Genie Status
+
+## 1.0 SYSTEM DIRECTIVE
+
+You are a Genie agent. Your task is to display the current **Status** of the project - processes, threads, instructions, and progress.
+
+---
+
+## 1.1 SETUP CHECK
+
+1. **Verify Genie is initialized:** Check for `.genie/genie-kernel.md`
+   - If missing: 
+     > "Genie is not initialized. Run `genie init` to set up the project."
+     > Halt.
+
+2. **Load all state files:**
+   - `.genie/genie-kernel.md`
+   - `.genie/genie-session.json`
+   - All `process-meta.json` files
+
+---
+
+## 2.0 STATUS DISPLAY
+
+### 2.1 System Overview
+
+```
+🧞 Genie Status
+═══════════════════════════════════════════════════
+
+📍 Current Position
+   Process: <active_process or 'None selected'>
+   Thread:  <active_thread or 'None'>
+   Instruction: <current or 'None in progress'>
+
+⚡ Quick Stats
+   Active Processes: <count>
+   Pending Interrupts: <count>
+   Overall Progress: <completed>/<total> (<percentage>%)
+
+```
+
+### 2.2 Process List
+
+For each process in kernel:
+
+```
+───────────────────────────────────────────────────
+🔵 [~] Authentication System (auth_20251227)
+   Priority: High
+   Progress: 4/12 instructions (33%)
+   
+   Threads:
+   ├─ [x] Login Flow (3/3 ✓)
+   ├─ [~] Registration (1/4) ← ACTIVE
+   │     └─ Current: "Email verification" [M]
+   └─ [ ] Password Reset (0/3)
+   
+   🔴 Interrupts: 1 pending
+   ⚠️ Test Debt: 2 instruction(s)
+
+───────────────────────────────────────────────────
+🔵 [ ] User Dashboard (dashboard_20251228)
+   Priority: Medium
+   Status: Blocked by Authentication System
+   Progress: 0/8 instructions (0%)
+
+```
+
+### 2.3 Dependency Visualization
+
+If there are dependencies:
+
+```
+📊 Dependency Chain
+   Authentication System
+   └─► User Dashboard (blocked)
+   └─► Settings Page (blocked)
+```
+
+---
+
+## 3.0 STATUS FLAGS
+
+### 3.1 `--archived`
+
+Show archived processes:
+
+```
+📦 Archived Processes
+───────────────────────────────────────────────────
+   setup_20251220 - Initial Setup (archived 7 days ago)
+   poc_20251215 - Proof of Concept (archived 12 days ago)
+
+Use `genie unarchive <id>` to restore.
+```
+
+### 3.2 `--interrupts`
+
+Show only processes/threads with pending interrupts:
+
+```
+🔴 Pending Interrupts
+───────────────────────────────────────────────────
+   [!] Critical: "Login crashes on iOS Safari"
+       Location: auth_20251227 / Login Flow
+       Added: 2 hours ago
+   
+   [?] Normal: "Improve error messages"
+       Location: auth_20251227 / Registration
+       Added: 1 day ago
+```
+
+### 3.3 `--blocked`
+
+Show only blocked processes:
+
+```
+🚫 Blocked Processes
+───────────────────────────────────────────────────
+   dashboard_20251228 - Blocked by: auth_20251227
+   settings_20251229 - Blocked by: auth_20251227
+```
+
+### 3.4 `--json`
+
+Output status as JSON for scripting:
+
+```json
+{
+  "active_process": "auth_20251227",
+  "processes": [...],
+  "total_instructions": 32,
+  "completed_instructions": 12,
+  "pending_interrupts": 2
+}
+```
+
+---
+
+## 4.0 RECOMMENDATIONS
+
+Based on status, offer contextual suggestions:
+
+**If interrupts pending:**
+> "💡 You have <n> pending interrupt(s). Use `genie exec` to handle them."
+
+**If blocked processes:**
+> "💡 <n> process(es) are blocked. Complete '<blocking_process>' to unblock them."
+
+**If process complete:**
+> "💡 '<process>' is complete! Use `genie archive` to clean up."
+
+**If no active work:**
+> "💡 No work in progress. Use `genie exec` to start, or `genie spawn` for new work."

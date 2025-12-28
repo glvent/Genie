@@ -1,0 +1,129 @@
+---
+description: Create a new thread within the current process
+globs: 
+alwaysApply: false
+---
+
+# Genie Fork
+
+## 1.0 SYSTEM DIRECTIVE
+
+You are a Genie agent. Your task is to create a new **Thread** - a feature or component within a process.
+
+**CRITICAL:** Validate all file operations. If any fail, halt and report.
+
+---
+
+## 1.1 SETUP CHECK
+
+1. **Verify Genie is initialized:** Check for `.genie/genie-kernel.md`
+   - If missing: "Genie is not initialized. Run `genie init` first."
+
+2. **Check for active process:** Read `.genie/genie-session.json`
+   - If `active_process` is null and no `--process` flag provided:
+     > "❌ Cannot fork - no active process selected.
+     > 
+     > Options:
+     >   A) Run 'genie spawn' to create a process first
+     >   B) Specify process: 'genie fork --process <process_id> \"Thread Name\"'
+     >   C) Run 'genie status' to see and select an existing process"
+
+3. **Check navigation lock:** 
+   - If `navigation_lock` is `true`: "Cannot fork while an instruction is in progress. Use `genie yield` first."
+
+---
+
+## 2.0 THREAD CREATION
+
+### 2.1 Determine Target Process
+
+**If `--process` flag provided:** Use specified process ID.
+**Otherwise:** Use `active_process` from session.
+
+### 2.2 Get Thread Description
+
+**If description provided as argument:** Use it directly.
+
+**If no description:** Ask:
+> "What thread would you like to create within process '<process_name>'?"
+
+### 2.3 Interactive Specification
+
+1. Ask 1-2 relevant questions:
+   - What's the main purpose of this thread?
+   - What are the key steps/instructions?
+
+2. **Offer shortcuts:**
+   - "D) Type your own details"
+   - "E) Auto-generate instructions based on description"
+
+### 2.4 Generate Thread Content
+
+1. **Generate thread structure:**
+```markdown
+### [ ] Thread: <Thread Name>
+- [ ] Instruction: <First instruction> [S/M/L/?]
+- [ ] Instruction: <Second instruction> [S/M/L/?]
+- [ ] Instruction: <Third instruction> [S/M/L/?]
+
+---
+Thread Estimate: <calculated from sizes>
+```
+
+2. **Ask for effort estimates:** 
+   > "Would you like to estimate effort for each instruction?
+   > [S] Small (<30 min), [M] Medium (30min-2hr), [L] Large (2hr+), [?] Unknown"
+
+---
+
+## 3.0 UPDATE PROCESS FILES
+
+### 3.1 Update process-queue.md
+
+1. Read `.genie/processes/<process_id>/process-queue.md`
+2. Append the new thread section
+3. Write updated content
+
+### 3.2 Update process-meta.json
+
+1. Read `.genie/processes/<process_id>/process-meta.json`
+2. Update `updated_at` timestamp
+3. Write updated content
+
+### 3.3 Update Kernel
+
+1. Backup kernel to `.genie/genie-kernel.md.backup`
+2. Find the process entry in kernel
+3. Update thread and instruction counts in the process header
+
+---
+
+## 4.0 DRY RUN MODE
+
+**If `--dry-run` flag is present:**
+
+```
+🔍 DRY RUN: genie fork "<Thread Name>"
+
+Target process: <process_id>
+
+Would perform the following actions:
+  ✓ Append thread to: .genie/processes/<process_id>/process-queue.md
+  ✓ Update: .genie/processes/<process_id>/process-meta.json
+  ✓ Update counts in: genie-kernel.md
+
+No changes made. Run without --dry-run to execute.
+```
+
+---
+
+## 5.0 COMPLETION
+
+1. **Announce success:**
+   > "Thread '<Thread Name>' created in process '<process_id>'.
+   > 
+   > Instructions added: <count>
+   > 
+   > Use `genie exec` to start working on instructions."
+
+2. **Update session:** Set `active_thread` to the new thread name

@@ -1,0 +1,184 @@
+---
+description: Navigate to a different process or thread
+globs: 
+alwaysApply: false
+---
+
+# Genie Jump
+
+## 1.0 SYSTEM DIRECTIVE
+
+You are a Genie agent. Your task is to **Jump** - navigate to a different process or thread while maintaining state integrity.
+
+**CRITICAL:** Enforce navigation rules to prevent invalid jumps. State must always be preserved.
+
+---
+
+## 1.1 SETUP CHECK
+
+1. **Verify Genie is initialized:** Check for `.genie/genie-kernel.md`
+   - If missing: "Nothing to jump to - Genie is not initialized."
+
+2. **Load session:** Read `.genie/genie-session.json`
+
+3. **Check navigation lock:**
+   - If `navigation_lock` is `true`:
+     > "❌ Cannot jump - instruction '<instruction>' is in progress.
+     > 
+     > Options:
+     >   A) Use `genie yield` to pause and save state first
+     >   B) Complete the current instruction
+     >   C) Cancel jump"
+     
+     Halt if user doesn't yield.
+
+---
+
+## 2.0 TARGET PARSING
+
+### 2.1 Accepted Formats
+
+- `genie jump` - Interactive selection
+- `genie jump <process_id>` - Jump to process (first pending thread)
+- `genie jump <process_id>/<thread>` - Jump to specific thread
+
+### 2.2 Interactive Selection
+
+```
+📍 Where would you like to jump?
+
+Current: auth_20251227 / Login Flow
+
+Available Processes:
+  1) auth_20251227 - Authentication System [~]
+     └─ Threads: Login Flow [~], Registration [ ], Password Reset [ ]
+  
+  2) dashboard_20251228 - User Dashboard [ ] (blocked)
+  
+  3) payments_20251229 - Payment Integration [ ]
+
+Enter number, or type process_id/thread:
+```
+
+---
+
+## 3.0 NAVIGATION RULES
+
+### 3.1 Rule: Cannot Jump to Blocked Process
+
+If target process has `*Blocked by:*`:
+```
+❌ Process 'User Dashboard' is blocked by 'Authentication System'.
+
+Options:
+  A) Complete the blocking process first
+  B) Use `genie kill` to remove the dependency
+  C) Cancel jump
+```
+
+### 3.2 Rule: Cannot Jump to Unstarted Thread in Another Process
+
+If jumping to a process that's not active, can only land on:
+- The first pending thread
+- A thread that was previously started
+
+```
+❌ Cannot jump to 'Password Reset' - 'Login Flow' thread is still in progress.
+
+In process 'auth_20251227', you can jump to:
+  - Registration (next pending thread)
+  
+Or complete Login Flow first.
+```
+
+### 3.3 Rule: Threads Must Be Sequential Within Process
+
+Within a process, can jump to:
+- The currently active thread
+- Any completed thread (for review)
+- The next pending thread
+
+Cannot skip ahead to later pending threads.
+
+---
+
+## 4.0 EXECUTE JUMP
+
+### 4.1 Save Current State
+
+Before jumping, update session:
+```json
+{
+  "jump_history": [
+    ...,
+    {
+      "process": "<previous_process>",
+      "thread": "<previous_thread>",
+      "at": "<timestamp>"
+    }
+  ]
+}
+```
+
+### 4.2 Update Active Context
+
+```json
+{
+  "active_process": "<new_process>",
+  "active_thread": "<new_thread>",
+  "current_instruction": null,
+  "last_activity": "<timestamp>"
+}
+```
+
+### 4.3 Load New Context
+
+Read and summarize the new context:
+- Process spec
+- Thread status
+- Next instruction
+
+---
+
+## 5.0 COMPLETION
+
+```
+✓ Jumped to: <process_name> / <thread_name>
+
+Context:
+  Process: <description>
+  Thread: <thread_description>
+  Progress: <completed>/<total> instructions
+  
+Next instruction: "<instruction_name>" [<size>]
+
+Use `genie exec` to start working.
+```
+
+---
+
+## 6.0 DRY RUN MODE
+
+**If `--dry-run` flag:**
+
+```
+🔍 DRY RUN: genie jump payments_20251229
+
+Would perform:
+  ✓ Save current position to jump_history
+  ✓ Set active_process: payments_20251229
+  ✓ Set active_thread: Initial Setup
+  ✓ Load process context
+
+Current position would be preserved for later return.
+
+No changes made. Run without --dry-run to execute.
+```
+
+---
+
+## 7.0 RETURNING
+
+Announce after jump:
+> "💡 Tip: Your previous position (auth_20251227 / Login Flow) is saved.
+> You can return anytime with `genie jump auth_20251227/Login Flow`"
